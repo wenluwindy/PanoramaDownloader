@@ -1,0 +1,349 @@
+﻿<Window x:Class="PanoramaDownloader.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        xmlns:vm="clr-namespace:PanoramaDownloader.App.ViewModels"
+        xmlns:conv="clr-namespace:PanoramaDownloader.App.Converters"
+        mc:Ignorable="d"
+        Title="全景图下载工具"
+        Height="720"
+        Width="1180"
+        MinHeight="600"
+        MinWidth="960"
+        WindowStartupLocation="CenterScreen"
+        Background="#F3F2EF">
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+    <Window.Resources>
+        <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:NullToVisibilityConverter x:Key="NullToVis"/>
+        <conv:InvertBoolConverter x:Key="InvertBool"/>
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="160"/>
+        </Grid.RowDefinitions>
+
+        <!-- 顶部工具栏 -->
+        <Border Grid.Row="0"
+                Background="White"
+                CornerRadius="8"
+                Padding="12"
+                BorderBrush="#E2E0DA"
+                BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="作品 URL"
+                           VerticalAlignment="Center"
+                           Margin="0,0,10,0"
+                           Foreground="#444"/>
+
+                <TextBox Grid.Column="1"
+                         Height="32"
+                         VerticalContentAlignment="Center"
+                         Padding="8,0"
+                         Text="{Binding SourceUrl, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="12,0,0,0">
+                    <Button Content="打开网址"
+                            Width="80"
+                            Height="32"
+                            Margin="0,0,8,0"
+                            Command="{Binding OpenUrlCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBool}}"/>
+                    <Button Content="分析"
+                            Width="72"
+                            Height="32"
+                            Margin="0,0,8,0"
+                            Command="{Binding AnalyzeCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBool}}"/>
+                    <Button Content="登录 720 云"
+                            Width="96"
+                            Height="32"
+                            Margin="0,0,8,0"
+                            Command="{Binding OpenLoginCommand}"/>
+                    <Button Content="退出登录"
+                            Width="80"
+                            Height="32"
+                            Margin="0,0,8,0"
+                            Command="{Binding LogoutCommand}"/>
+                    <Button Content="显隐网页"
+                            Width="80"
+                            Height="32"
+                            Margin="0,0,8,0"
+                            Command="{Binding ToggleWebViewCommand}"/>
+                    <Button Content="设置"
+                            Width="64"
+                            Height="32"
+                            Margin="0,0,8,0"
+                            Command="{Binding OpenSettingsCommand}"/>
+                    <Button Content="关于"
+                            Width="64"
+                            Height="32"
+                            Command="{Binding OpenAboutCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 主内容 -->
+        <Grid Grid.Row="1" Margin="0,12,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 左侧：场景列表 + 摘要 -->
+            <Border Background="White"
+                    CornerRadius="8"
+                    BorderBrush="#E2E0DA"
+                    BorderThickness="1"
+                    Padding="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="检测结果"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="#1A1A1A"
+                                   VerticalAlignment="Center"/>
+                        <CheckBox Grid.Column="1"
+                                  Content="仅多瓦片"
+                                  IsChecked="{Binding OnlyShowMultiTileScenes}"
+                                  VerticalAlignment="Center"
+                                  ToolTip="只显示已探测到多个瓦片的场景"/>
+                    </Grid>
+
+                    <StackPanel Grid.Row="1" Margin="0,8,0,12">
+                        <TextBlock Text="{Binding StatusText}" Foreground="#666" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding LoginStatusText}" Foreground="#888" Margin="0,4,0,0" FontSize="12"/>
+                        <TextBlock Text="{Binding ManifestSummary}" Foreground="#333" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding SceneFilterHint}" Foreground="#888" Margin="0,4,0,0" FontSize="11"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <ListBox Grid.Row="2"
+                             ItemsSource="{Binding VisibleScenes}"
+                             SelectedItem="{Binding SelectedScene}"
+                             BorderThickness="0"
+                             Background="Transparent"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,8"
+                                        Padding="8"
+                                        Background="#F7F6F3"
+                                        CornerRadius="6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="64"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="56" Height="56" Background="#DDD" CornerRadius="4" ClipToBounds="True">
+                                            <Grid>
+                                                <TextBlock Text="无图"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"
+                                                           FontSize="11"
+                                                           Foreground="#999"
+                                                           Visibility="{Binding Thumbnail, Converter={StaticResource NullToVis}, ConverterParameter=Invert}"/>
+                                                <Image Source="{Binding Thumbnail}" Stretch="UniformToFill">
+                                                    <Image.Style>
+                                                        <Style TargetType="Image">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Thumbnail}" Value="{x:Null}">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Image.Style>
+                                                </Image>
+                                                <Border Background="#88000000"
+                                                        Visibility="{Binding IsThumbnailLoading, Converter={StaticResource BoolToVis}}">
+                                                    <TextBlock Text="…"
+                                                               Foreground="White"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               FontSize="16"/>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding MetaSummary}" FontSize="11" Foreground="#666" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding Id}" FontSize="11" Foreground="#888" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <StackPanel Grid.Row="3" Margin="0,12,0,0">
+                        <TextBlock Text="{Binding ProgressText}" FontSize="12" Foreground="#666" Margin="0,0,0,6"/>
+                        <ProgressBar Height="8" Value="{Binding ProgressValue}" Maximum="100"/>
+                        <UniformGrid Columns="4" Margin="0,10,0,0">
+                            <Button Content="导出瓦片" Margin="0,0,4,0" Height="30"
+                                    Command="{Binding ExportTilesCommand}"
+                                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBool}}"/>
+                            <Button Content="导出整图" Margin="2,0,2,0" Height="30"
+                                    Command="{Binding ExportEquirectCommand}"
+                                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBool}}"/>
+                            <Button Content="全部导出" Margin="2,0,2,0" Height="30"
+                                    Command="{Binding ExportBothCommand}"
+                                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBool}}"/>
+                            <Button Content="默认导出" Margin="4,0,0,0" Height="30"
+                                    ToolTip="按设置中的默认导出模式执行"
+                                    Command="{Binding ExportDefaultCommand}"
+                                    IsEnabled="{Binding IsBusy, Converter={StaticResource InvertBool}}"/>
+                        </UniformGrid>
+                        <Button Content="取消导出" Height="28" Margin="0,8,0,0"
+                                Command="{Binding CancelExportCommand}"
+                                Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 右侧：缩略图预览 + WebView -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="220"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Background="White"
+                        CornerRadius="8"
+                        BorderBrush="#E2E0DA"
+                        BorderThickness="1"
+                        Padding="12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="280"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Background="#EDECE8" CornerRadius="6">
+                            <Grid>
+                                <TextBlock Text="场景缩略图预览"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Foreground="#999"
+                                           Visibility="{Binding SelectedScene.Thumbnail, Converter={StaticResource NullToVis}, ConverterParameter=Invert}"/>
+                                <Image Source="{Binding SelectedScene.Thumbnail}"
+                                       Stretch="Uniform"
+                                       Margin="8"/>
+                                <Border Background="#66000000"
+                                        CornerRadius="6"
+                                        Visibility="{Binding SelectedScene.IsThumbnailLoading, Converter={StaticResource BoolToVis}}">
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <ProgressBar IsIndeterminate="True" Width="120" Height="4"/>
+                                        <TextBlock Text="加载缩略图…"
+                                                   Foreground="White"
+                                                   Margin="0,8,0,0"
+                                                   HorizontalAlignment="Center"
+                                                   FontSize="12"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="当前场景" FontSize="12" Foreground="#888"/>
+                            <TextBlock Text="{Binding SelectedScene.Name, FallbackValue=未选择}"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap"
+                                       Margin="0,4,0,8"/>
+                            <TextBlock Text="{Binding SelectedScene.Id, FallbackValue=-}"
+                                       FontSize="12"
+                                       Foreground="#666"
+                                       TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding SelectedScene.MetaSummary, FallbackValue=未解析}"
+                                       FontSize="12"
+                                       Foreground="#555"
+                                       Margin="0,8,0,0"
+                                       TextWrapping="Wrap"/>
+                            <Button Content="3D 旋转预览"
+                                    Height="32"
+                                    Margin="0,14,0,0"
+                                    Command="{Binding OpenLastEquirect3DCommand}"
+                                    ToolTip="预览最近导出的等距柱状整图（可拖拽旋转）"/>
+                            <TextBlock Text="一期提供缩略图确认；导出整图后可在此或预览窗中打开 3D。"
+                                       Margin="0,10,0,0"
+                                       FontSize="12"
+                                       Foreground="#999"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="2"
+                        Background="White"
+                        CornerRadius="8"
+                        BorderBrush="#E2E0DA"
+                        BorderThickness="1"
+                        Visibility="{Binding IsWebViewVisible, Converter={StaticResource BoolToVis}}">
+                    <DockPanel>
+                        <Border DockPanel.Dock="Top" Background="#FAFAF8" Padding="10,6" BorderBrush="#E2E0DA" BorderThickness="0,0,0,1">
+                            <TextBlock x:Name="WebViewStatusText"
+                                       Text="WebView2 初始化中…"
+                                       FontSize="12"
+                                       Foreground="#666"/>
+                        </Border>
+                        <wv2:WebView2 x:Name="Browser"/>
+                    </DockPanel>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- 日志 -->
+        <Border Grid.Row="2"
+                Background="White"
+                CornerRadius="8"
+                BorderBrush="#E2E0DA"
+                BorderThickness="1"
+                Padding="12">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <TextBlock Text="日志"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="复制日志" Height="26" Padding="10,0" Margin="0,0,8,0"
+                                Command="{Binding CopyLogCommand}"/>
+                        <Button Content="清空" Height="26" Padding="10,0"
+                                Command="{Binding ClearLogCommand}"/>
+                    </StackPanel>
+                </Grid>
+                <ListBox ItemsSource="{Binding LogLines}"
+                         BorderThickness="0"
+                         FontFamily="Consolas"
+                         FontSize="12"
+                         Background="Transparent"/>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

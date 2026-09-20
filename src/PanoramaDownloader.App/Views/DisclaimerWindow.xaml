@@ -1,0 +1,45 @@
+<Window x:Class="PanoramaDownloader.App.Views.DisclaimerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="使用声明"
+        Width="520"
+        Height="360"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F7F7F5">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="全景图下载工具 — 使用声明"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Foreground="#1A1A1A"/>
+
+        <ScrollViewer Grid.Row="1" Margin="0,16,0,16" VerticalScrollBarVisibility="Auto">
+            <TextBlock TextWrapping="Wrap" LineHeight="22" Foreground="#333">
+                本工具仅供用户导出其有权访问或自有的 720 云全景内容，用于个人存档或授权范围内的二次制作。
+                <LineBreak/><LineBreak/>
+                请勿用于未获授权的内容抓取、传播或商业用途。使用本软件即表示您已知晓并自行承担相应法律责任。
+                <LineBreak/><LineBreak/>
+                登录请在软件内嵌页面通过 720 云官方流程完成；本工具不会上传您的账号 Cookie 到任何第三方服务器。
+            </TextBlock>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="不同意并退出"
+                    Width="120"
+                    Height="32"
+                    Margin="0,0,12,0"
+                    Click="Decline_Click"/>
+            <Button Content="同意并继续"
+                    Width="120"
+                    Height="32"
+                    IsDefault="True"
+                    Click="Accept_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
