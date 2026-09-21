@@ -54,3 +54,4 @@ Desktop.ini
 
 # App local data (if accidentally created in repo)
 **/WebView2UserData/
+/dist
