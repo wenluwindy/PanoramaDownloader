@@ -6,6 +6,8 @@
 
 Windows 桌面端 · 瓦片包 + 等距柱状整图 · 本地登录 · 隐私不出机
 
+如果好用，请给我一颗星
+
 <br/>
 
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
