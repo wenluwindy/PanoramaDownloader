@@ -31,6 +31,7 @@ bld/
 
 # NuGet
 *.nupkg
+*.snupkg
 **/[Pp]ackages/*
 !**/[Pp]ackages/build/
 *.nuget.props
@@ -38,6 +39,9 @@ bld/
 project.lock.json
 project.fragment.lock.json
 artifacts/
+
+# dotenv environment variables file
+.env
 
 # JetBrains Rider
 .idea/
